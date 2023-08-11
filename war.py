@@ -64,6 +64,14 @@ class Player:
 
 # 2. Shuffling and Dealing:
 #    - In the Deck class, implement methods to shuffle the cards and deal cards to players.
+def main():
+    #26 cards for each player
+    deck = Deck()
+    half = len(deck.cards) // 2
+    player1 = deck.cards[:half]
+    player2 = deck.cards[half:]   
+    winner=game(player1, player2)
+    print(winner) 
 
 
 
