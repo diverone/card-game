@@ -1,150 +1,109 @@
 import random
 
-# Card game "War" Setup:
-
-# 1. Create the basic structures:
-
-#    - Create a Card class: Each card has a suit and rank.
 class Card:
     def __init__(self, suit, rank):
         self.suit = suit
         self.rank = rank
-        # Dictionary to map rank names to numeric values for comparison
-        values = {
-            "2": 2, "3": 3, "4": 4, "5": 5,
-            "6": 6, "7": 7, "8": 8, "9": 9,
-            "10": 10, "Jack": 11, "Queen": 12,
-            "King": 13, "Ace": 14
-        }
-        # Assign the numeric value for the card based on its rank
-        self.value = values[rank]
+        self.value = self.rank_value(rank) # Assign the numeric value based on rank
+
+    @staticmethod
+    def rank_value(rank):
+        """Map the rank to its corresponding numeric value."""
+        values = {"2": 2, "3": 3, "4": 4, "5": 5, "6": 6, "7": 7, "8": 8, "9": 9, "10": 10, "Jack": 11, "Queen": 12, "King": 13, "Ace": 14}
+        return values[rank]
 
     def __str__(self):
         return f"{self.rank} of {self.suit}"
-    
-    def compare_to(self, other_card):
-        # Compare this card's value to another card's value
-        if self.value > other_card.value:
-            return self
-        elif self.value < other_card.value:
-            return other_card
-        else:
-            return None  # Tie
-    
 
-#    - Create a Deck class: The deck contains 52 cards, shuffled randomly.
 class Deck:
     def __init__(self):
+        self.cards = self.generate_deck()
+        random.shuffle(self.cards) # Shuffle the deck
+
+    @staticmethod
+    def generate_deck():
+        """Generate a standard deck of 52 cards."""
         suits = ["Hearts", "Diamonds", "Clubs", "Spades"]
         ranks = ["2", "3", "4", "5", "6", "7", "8", "9", "10", "Jack", "Queen", "King", "Ace"]
-        self.cards = [Card(suit, rank) for suit in suits for rank in ranks]
-        random.shuffle(self.cards)
+        return [Card(suit, rank) for suit in suits for rank in ranks]
 
-    def deal(self):
-        return self.cards.pop()
+def display_status(rounds_played, player1, player2):
+    """Display the current status of the game."""
+    print(f"Round {rounds_played}: Player 1 has {len(player1)} cards and Player 2 has {len(player2)} cards")
+    input("Press enter to continue...")
 
-    def __str__(self):
-        return f"{len(self.cards)} cards left in the deck."
-    
 
-#    - Create a Player class: Each player has a name and a hand of cards.
-class Player:
-    def __init__(self, name):
-        self.name = name
-        self.hand = []
+# Play a single round of the game, comparing the cards and determining the winner of the round.
+def play_round(player1, player2):
+    card1 = player1.pop(0)
+    card2 = player2.pop(0)
+    print(f"Player one has a {card1} Player two has a {card2}")
+    if card1.value > card2.value:
+        print("Player 1 won this round")
+        player1 += [card1, card2]
+    elif card1.value < card2.value:
+        print("Player 2 won this round")
+        player2 += [card1, card2]
+    else: # handle war
+        player1, player2 = handle_war(player1, player2, card1, card2)
+    return player1, player2
 
-    def draw(self):
-        return self.hand.pop(0)
 
-    def add_cards(self, cards):
-        self.hand.extend(cards)
+# Handle the 'war' scenario, where players have cards of the same rank.
+def handle_war(player1, player2, card1, card2):
+    print("War!")
+    # Additional logic for handling the "war" scenario
+    # Collect cards in a temporary "pot"
+    pot = [card1, card2]
+    while card1.value == card2.value:
+        if len(player1) < 4 or len(player2) < 4:
+            # Not enough cards to continue the war game ends
+            return player1, player2
+        pot += [player1.pop(0) for _ in range(3)] + [player2.pop(0) for _ in range(3)]
+        card1, card2 = player1.pop(0), player2.pop(0)
+        pot += [card1, card2]
 
-    def __str__(self):
-        return f"{self.name} has {len(self.hand)} cards."
+    # Determine winner of the war and give them the pot
+    if card1.value > card2.value:
+        player1 += pot
+    else:
+        player2 += pot
 
-# 2. Shuffling and Dealing:
-#    - In the Deck class, implement methods to shuffle the cards and deal cards to players.
-def main():
-    #26 cards for each player
+    return player1, player2
+
+
+# Main game loop that handles the entire game play.
+def game():
     deck = Deck()
     half = len(deck.cards) // 2
     player1 = deck.cards[:half]
-    player2 = deck.cards[half:]   
-    winner=game(player1, player2)
-    print(winner) 
+    player2 = deck.cards[half:]
+    rounds_played = 0
+
+    while len(player1) > 0 and len(player2) > 0 and rounds_played < 50:
+        rounds_played += 1
+        display_status(rounds_played, player1, player2)
+        player1, player2 = play_round(player1, player2)
+
+    return determine_winner(player1, player2)
 
 
-
-# 3. Game Logic:
-#    - In the Player class, implement methods to draw a card from their hand and compare cards with another player.
-#    - In the main game loop, players take turns drawing cards, comparing ranks, and resolving "war" scenarios.
-
-
-# 4. Winning:
-#    - Keep track of the number of cards each player has. The player with all the cards wins.
-
-
-# 5. User Interaction:
-#    - Display game prompts to the user for each round.
-#    - Show the cards played by both players and the outcome of each round.
-#    - Display the winner at the end of the game.
+# Determine the winner based on the number of cards remaining.
+def determine_winner(player1, player2):
+    if len(player1) == len(player2):
+        return "It's a tie!"
+    elif len(player1) > len(player2):
+        return "Player 1 is the winner!"
+    else:
+        return "Player 2 is the winner!"
 
 
-# 6. Error Handling:
-#    - Handle cases where players run out of cards, especially during "war" scenarios.
+# Entry point of the program.
+def main():
+    print("Are you ready for the war game? If yes press enter to continue...")
+    input() # Wait for user to press enter
+    winner = game()
+    print(winner)
 
-# Create cards
-card1 = Card("Hearts", "Ace")
-card2 = Card("Clubs", "King")
-
-print(card1)  # Output: Ace of Hearts
-print(card2)  # Output: King of Clubs
-
-# Create a deck and check its contents
-deck = Deck()
-print(deck)  # Output: 52 cards left in the deck
-
-# Deal a card
-dealt_card = deck.deal()
-print(dealt_card)  # Output: Will show one of the cards, e.g., 2 of Hearts
-print(deck)  # Output: 51 cards left in the deck
-
-# Create players
-player1 = Player("Alice")
-player2 = Player("Bob")
-
-# Add cards to players' hands
-player1.add_cards([card1, card2])
-player2.add_cards([dealt_card])
-
-print(player1)  # Output: Alice has 2 cards.
-print(player2)  # Output: Bob has 1 cards.
-
-# Draw a card from player's hand
-drawn_card = player1.draw()
-print(drawn_card)  # Output: Ace of Hearts (since card1 was added first)
-print(player1)  # Output: Alice has 1 cards.
-
-# Create two cards with different values
-card1 = Card("Hearts", "Ace")  # Value = 14
-card2 = Card("Clubs", "King")  # Value = 13
-
-# Compare them using the compare_to method
-winner_card = card1.compare_to(card2)
-
-# Print the result
-if winner_card is card1:
-    print("Card 1 wins!")  # Output: Card 1 wins!
-elif winner_card is card2:
-    print("Card 2 wins!") # Output: Card 2 wins!
-else:
-    print("It's a tie!")
-
-# Create a deck and check its contents
-deck = Deck()
-print(deck)  # Output: 52 cards left in the deck
-
-# Deal a card
-dealt_card = deck.deal()
-print(dealt_card)  # Output: Will show one of the cards, e.g., 2 of Hearts
-print(deck)  # Output: 51 cards left in the deck
+if __name__ == "__main__":
+    main()
