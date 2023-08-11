@@ -20,9 +20,9 @@ Winning:
 // Keep track of the number of cards each player has. The player with all the cards wins. 
 
 
-// User Interaction:
+User Interaction:
 
-Display game prompts to the user for each round. Show the cards played by both players and the outcome of each round. Display the winner at the end of the game. 
+// Display game prompts to the user for each round. Show the cards played by both players and the outcome of each round. Display the winner at the end of the game. 
 
 
 Error Handling:
